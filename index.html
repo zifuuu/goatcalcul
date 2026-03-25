@@ -1,35 +1,36 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>GoatCalcul v11.0 | Dashboard Intégral</title>
+    <title>GoatCalcul v12.0 | Dashboard Expert</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --bg: #09090b; --card: #18181b; --border: #27272a; --text: #fafafa; --primary: #3b82f6; --success: #22c55e; --orange: #f59e0b; }
+        :root { --bg: #09090b; --card: #18181b; --border: #27272a; --text: #fafafa; --primary: #3b82f6; --success: #22c55e; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 1500px; margin: auto; }
-        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .container { max-width: 1400px; margin: auto; }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         .grid-main { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
         .grid-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
         .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
         input, select { background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 10px; color: white; width: 100%; margin-bottom: 12px; box-sizing: border-box; }
-        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; }
-        .btn:hover { filter: brightness(1.2); }
-        .slider-container { background: #000; padding: 20px; border-radius: 12px; border: 1px solid var(--primary); margin-bottom: 20px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-bottom: 5px; }
+        .btn-model { background: #27272a; color: #aaa; font-size: 11px; border: 1px solid #444; padding: 8px; margin: 2px; cursor: pointer; border-radius: 4px; }
+        .btn-model:hover { border-color: var(--primary); color: white; }
         .chart-container { height: 300px; position: relative; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
-        h3 { font-size: 14px; text-transform: uppercase; color: #a1a1aa; margin-top: 0; }
+        .legend-fix { color: gray; font-size: 10px; margin-top: -10px; margin-bottom: 10px; display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-flex">
-        <h1>GoatCalcul <span style="color:var(--primary)">v11.0</span></h1>
+        <h1>GoatCalcul <span style="color:var(--primary)">v12.0</span></h1>
         <div style="text-align:right">
-            <div style="color:gray; font-size:12px;">CAPITAL TOTAL</div>
-            <div id="totalDisplay" style="font-size: 28px; font-weight: 800; color: var(--success);">0 €</div>
+            <div style="color:gray; font-size:11px;">MON PORTFEUILLE RÉEL</div>
+            <div id="totalDisplay" style="font-size: 26px; font-weight: 800; color: var(--success);">0 €</div>
         </div>
     </div>
 
@@ -37,56 +38,69 @@
         <aside>
             <div class="card">
                 <h3>📥 Ajouter un Actif</h3>
-                <input type="text" id="name" list="fonds-list" placeholder="Nom (ex: Iroko, MSCI World...)">
-                <datalist id="fonds-list">
-                    <option value="SCPI Remake Live"><option value="Iroko Zen"><option value="Amundi MSCI Water">
-                    <option value="Amundi MSCI USA ESG"><option value="NextStage Croissance A"><option value="AXA Or">
+                <span class="legend-fix">Tapez "AM" ou "SC" pour voir les propositions</span>
+                
+                <input type="text" id="assetName" list="fonds-propositions" placeholder="Ex: Amundi, Iroko...">
+                <datalist id="fonds-propositions">
+                    <option value="SCPI Remake Live">
+                    <option value="Iroko Zen">
+                    <option value="AMUNDI MSCI USA ESG LEADERS">
+                    <option value="AMUNDI INDEX MSCI EMU SRI PAB">
+                    <option value="Amundi MSCI Water ESG">
+                    <option value="LYXOR ETF NEW ENERGY">
+                    <option value="Amundi MSCI Em Mkt Swap II">
+                    <option value="AXA Or et Matières Premières">
+                    <option value="R-co Thematic Blockchain">
+                    <option value="NextStage Croissance A">
                 </datalist>
 
-                <input type="number" id="amount" placeholder="Montant (€)">
+                <input type="number" id="assetAmount" placeholder="Montant (€)">
 
-                <label style="font-size:11px">CLASSE D'ACTIF</label>
-                <select id="assetClass">
-                    <option value="bourse">📈 Actions / ETF</option>
+                <select id="assetType">
+                    <option value="bourse">📈 Bourse / ETF</option>
                     <option value="immo">🏠 Immobilier / SCPI</option>
                     <option value="pe">💼 Private Equity</option>
-                    <option value="crypto">⛓️ Crypto / Blockchain</option>
+                    <option value="crypto">⛓️ Crypto</option>
                 </select>
 
-                <label style="font-size:11px">ZONE GÉOGRAPHIQUE</label>
-                <select id="geoZone">
-                    <option value="usa">États-Unis</option>
-                    <option value="europe">Europe</option>
-                    <option value="monde">Monde / Emergents</option>
+                <select id="assetGeo">
+                    <option value="États-Unis">États-Unis</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Monde / Emergents">Monde / Emergents</option>
+                    <option value="Asie">Asie</option>
                 </select>
 
-                <button class="btn" onclick="addAsset()">Ajouter au Portefeuille</button>
+                <button class="btn" onclick="addAsset()">Ajouter</button>
+
+                <div style="margin-top:20px; padding-top:15px; border-top: 1px solid #333;">
+                    <h3 style="font-size:11px;">🏆 Modèles de Comparaison (Benchmark)</h3>
+                    <button class="btn-model" onclick="setBenchmark('MSCI World', 0.08)">🆚 vs MSCI World (8%)</button>
+                    <button class="btn-model" onclick="setBenchmark('S&P 500', 0.10)">🆚 vs S&P 500 (10%)</button>
+                    <button class="btn-model" onclick="setBenchmark('Prudent', 0.04)">🆚 vs Prudent (4%)</button>
+                </div>
             </div>
 
             <div class="card" style="margin-top:20px;">
                 <h3>📄 Mes Lignes</h3>
-                <table id="portfolioTable">
-                    <thead><tr><th>Fond</th><th>Montant</th><th></th></tr></thead>
-                    <tbody></tbody>
-                </table>
-                <button onclick="clearAll()" style="width:100%; background:none; border:1px solid #444; color:gray; margin-top:15px; cursor:pointer; border-radius:4px; padding:5px;">Réinitialiser tout</button>
+                <table id="portfolioTable"><tbody></tbody></table>
+                <button onclick="clearAll()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; font-size:10px; margin-top:10px;">Tout effacer</button>
             </div>
         </aside>
 
         <main>
-            <div class="slider-container">
-                <label>⏱️ Horizon de projection : <b id="yearVal" style="color:var(--primary)">20</b> ans</label>
-                <input type="range" id="yearSlider" min="5" max="50" step="5" value="20" oninput="updateYear(this.value)" style="width:100%; accent-color:var(--primary); margin-top:10px;">
+            <div class="card" style="margin-bottom:20px;">
+                <label>⏱️ Projection sur : <b id="yearVal" style="color:var(--primary)">20</b> ans</label>
+                <input type="range" id="yearSlider" min="5" max="50" step="5" value="20" oninput="updateYear(this.value)" style="width:100%; margin-top:10px;">
             </div>
 
             <div class="card">
-                <h3>📈 Simulation de Croissance (vs MSCI World 8%)</h3>
+                <h3 id="chartTitle">📈 Projection vs Benchmark</h3>
                 <div class="chart-container"><canvas id="compareChart"></canvas></div>
             </div>
 
             <div class="grid-charts">
                 <div class="card">
-                    <h3>📊 Allocation par Type</h3>
+                    <h3>📊 Allocation Actifs</h3>
                     <div class="chart-container"><canvas id="assetChart"></canvas></div>
                 </div>
                 <div class="card">
@@ -100,8 +114,9 @@
 
 <script>
     let assets = JSON.parse(localStorage.getItem('goatAssets')) || [];
-    let charts = {};
+    let charts = { p: null, a: null, g: null };
     let horizon = 20;
+    let benchmark = { name: 'MSCI World', rate: 0.08 };
 
     function save() {
         localStorage.setItem('goatAssets', JSON.stringify(assets));
@@ -109,75 +124,111 @@
     }
 
     function addAsset() {
-        const name = document.getElementById('name').value;
-        const amount = parseFloat(document.getElementById('amount').value);
-        const aClass = document.getElementById('assetClass').value;
-        const gZone = document.getElementById('geoZone').value;
-
+        const name = document.getElementById('assetName').value;
+        const amount = parseFloat(document.getElementById('assetAmount').value);
+        const type = document.getElementById('assetType').value;
+        const geo = document.getElementById('assetGeo').value;
+        
         if(!name || isNaN(amount)) return;
-        assets.push({ name, amount, aClass, gZone });
+        assets.push({ name, amount, type, geo });
         save();
-        document.getElementById('name').value = '';
-        document.getElementById('amount').value = '';
+        document.getElementById('assetName').value = '';
+        document.getElementById('assetAmount').value = '';
     }
 
     function remove(i) { assets.splice(i, 1); save(); }
-    function clearAll() { if(confirm("Supprimer toutes les données ?")) { assets = []; save(); } }
+    function clearAll() { if(confirm("Vider le portefeuille ?")) { assets = []; save(); } }
     function updateYear(v) { horizon = parseInt(v); document.getElementById('yearVal').innerText = v; update(); }
+    
+    function setBenchmark(name, rate) {
+        benchmark = { name, rate };
+        update();
+    }
 
     function update() {
         let total = 0;
-        let distClass = { bourse:0, immo:0, pe:0, crypto:0 };
-        let distGeo = { usa:0, europe:0, monde:0 };
+        let dType = { bourse:0, immo:0, pe:0, crypto:0 };
+        let dGeo = {}; 
+        
         const tbody = document.querySelector('#portfolioTable tbody');
         tbody.innerHTML = '';
 
         assets.forEach((a, i) => {
             total += a.amount;
-            distClass[a.aClass] += a.amount;
-            distGeo[a.gZone] += a.amount;
+            dType[a.type] += a.amount;
+            dGeo[a.geo] = (dGeo[a.geo] || 0) + a.amount;
             tbody.innerHTML += `<tr><td>${a.name}</td><td>${a.amount.toLocaleString()}€</td><td><button onclick="remove(${i})" style="color:red; background:none; border:none; cursor:pointer;">✕</button></td></tr>`;
         });
 
         document.getElementById('totalDisplay').innerText = total.toLocaleString() + " €";
-        renderCharts(total, distClass, distGeo);
+        renderCharts(total, dType, dGeo);
     }
 
-    function renderCharts(total, dClass, dGeo) {
-        // --- 1. PROJECTION ---
+    function renderCharts(total, dT, dG) {
+        // --- PROJECTION ---
         const ctxP = document.getElementById('compareChart').getContext('2d');
         if(charts.p) charts.p.destroy();
-        let trajM = [total], trajW = [total], labs = ["An 0"];
-        for(let y=1; y<=horizon; y++) {
-            trajM.push(trajM[y-1] * 1.06); // Est. 6%
-            trajW.push(trajW[y-1] * 1.08); // MSCI 8%
-            labs.push("An " + y);
+        let trajM = [total], trajB = [total], labs = ["An 0"];
+        for(let y=1; y<=horizon; y++){
+            trajM.push(trajM[y-1] * 1.06); 
+            trajB.push(trajB[y-1] * (1 + benchmark.rate));
+            labs.push("An "+y);
         }
         charts.p = new Chart(ctxP, {
             type: 'line',
             data: { labels: labs, datasets: [
-                { label: 'Mon Portefeuille (6%)', data: trajM, borderColor: '#22c55e', tension: 0.2, pointRadius: 0 },
-                { label: 'MSCI World (8%)', data: trajW, borderColor: '#3b82f6', borderDash:[5,5], tension: 0.2, pointRadius: 0 }
+                { label: 'Mon PF (Est. 6%)', data: trajM, borderColor: '#22c55e', tension: 0.2, pointRadius: 0 },
+                { label: benchmark.name + ' (' + (benchmark.rate*100) + '%)', data: trajB, borderColor: '#3b82f6', borderDash:[5,5], tension: 0.2, pointRadius: 0 }
             ]},
-            options: { maintainAspectRatio:false, plugins:{legend:{labels:{color:'#fff'}}}, scales:{y:{ticks:{color:'#888', callback:v=>v.toLocaleString()+'€'}, grid:{color:'#27272a'}}, x:{ticks:{color:'#888'}}} }
+            options: { 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { labels: { color: '#fff' } },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: { 
+                    y: { ticks: { color: '#888' }, grid: { color: '#27272a' } },
+                    x: { ticks: { color: '#888' } }
+                }
+            }
         });
 
-        // --- 2. ASSETS ---
+        // --- ASSETS (Labels corrigés) ---
         const ctxA = document.getElementById('assetChart').getContext('2d');
         if(charts.a) charts.a.destroy();
         charts.a = new Chart(ctxA, {
             type: 'doughnut',
-            data: { labels: ['Bourse', 'SCPI', 'PE', 'Crypto'], datasets: [{ data: [dClass.bourse, dClass.immo, dClass.pe, dClass.crypto], backgroundColor: ['#3b82f6','#22c55e','#f59e0b','#a855f7'], borderWidth:0 }]},
-            options: { maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{color:'#fff'}}} }
+            data: { 
+                labels: ['Bourse', 'Immo', 'PE', 'Crypto'], 
+                datasets: [{ data: [dT.bourse, dT.immo, dT.pe, dT.crypto], backgroundColor: ['#3b82f6','#22c55e','#f59e0b','#a855f7'], borderWidth: 0 }]
+            },
+            options: { 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { position: 'bottom', labels: { color: '#fff' } },
+                    tooltip: { callbacks: { label: (item) => ` ${item.label}: ${item.raw.toLocaleString()}€` } }
+                }
+            }
         });
 
-        // --- 3. GEO ---
+        // --- GEO (Labels Dynamiques corrigés) ---
         const ctxG = document.getElementById('geoChart').getContext('2d');
         if(charts.g) charts.g.destroy();
+        const geoLabels = Object.keys(dG);
+        const geoData = Object.values(dG);
         charts.g = new Chart(ctxG, {
             type: 'doughnut',
-            data: { labels: ['USA', 'Europe', 'Monde'], datasets: [{ data: [dGeo.usa, dGeo.europe, dGeo.monde], backgroundColor: ['#3b82f6','#10b981','#6366f1'], borderWidth:0 }]},
-            options: { maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{color:'#fff'}}} }
+            data: { 
+                labels: geoLabels, 
+                datasets: [{ data: geoData, backgroundColor: ['#3b82f6','#10b981','#6366f1','#f43f5e'], borderWidth: 0 }]
+            },
+            options: { 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { position: 'bottom', labels: { color: '#fff' } },
+                    tooltip: { callbacks: { label: (item) => ` ${item.label}: ${item.raw.toLocaleString()}€` } }
+                }
+            }
         });
     }
 
