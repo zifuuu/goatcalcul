@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>GoatCalcul v16.0 | Simulation Réaliste</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg: #09090b; --card: #18181b; --border: #27272a; --text: #fafafa; --primary: #3b82f6; --success: #22c55e; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: auto; }
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        input, select { background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 12px; color: white; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        .chart-container { height: 350px; position: relative; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        td { padding: 10px; border-bottom: 1px solid var(--border); }
+        .delete-btn { color: #ff4444; cursor: pointer; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <h1>GoatCalcul <span style="color:var(--primary)">v16</span></h1>
+        <div id="totalDisplay" style="font-size: 32px; font-weight: 800; color: var(--success);">0 €</div>
+    </header>
+
+    <div class="grid">
+        <aside>
+            <div class="card">
+                <h3>📥 Ajouter un Actif</h3>
+                <input type="text" id="nomFonds" list="suggestions" placeholder="Nom du fond...">
+                <datalist id="suggestions">
+                    <option value="SCPI Remake Live"><option value="Iroko Zen"><option value="Amundi MSCI USA ESG">
+                    <option value="Amundi MSCI Water"><option value="AXA Or"><option value="NextStage Croissance">
+                </datalist>
+                <input type="number" id="montantFonds" placeholder="Montant (€)">
+                <input type="number" id="fraisFonds" placeholder="Frais TER % (ex: 0.2)" step="0.1">
+                
+                <select id="typeFonds">
+                    <option value="Bourse">📈 Actions / ETF (Haut rendement)</option>
+                    <option value="Immo">🏠 SCPI / Immo (Stable)</option>
+                    <option value="PE">💼 Private Equity (Long terme)</option>
+                    <option value="Crypto">⛓️ Crypto (Volatile)</option>
+                </select>
+                
+                <select id="geoFonds">
+                    <option value="USA">USA</option><option value="Europe">Europe</option>
+                    <option value="Monde">Monde</option><option value="Asie">Asie</option>
+                </select>
+                <button class="btn-add" onclick="ajouterActif()">Ajouter</button>
+            </div>
+
+            <div class="card">
+                <h3>📄 Portefeuille</h3>
+                <table id="tablePortefeuille"><tbody></tbody></table>
+                <button onclick="viderTout()" style="width:100%; background:none; border:1px solid #444; color:gray; margin-top:10px; cursor:pointer; padding:5px; font-size:10px;">Vider</button>
+            </div>
+        </aside>
+
+        <main>
+            <div class="card">
+                <label>Horizon : <b id="valHorizon">20</b> ans</label>
+                <input type="range" id="sliderHorizon" min="5" max="50" step="5" value="20" oninput="majHorizon(this.value)" style="width:100%;">
+                <div class="chart-container"><canvas id="chartProjection"></canvas></div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div class="card"><h3>Type</h3><div class="chart-container"><canvas id="chartType"></canvas></div></div>
+                <div class="card"><h3>Géo</h3><div class="chart-container"><canvas id="chartGeo"></canvas></div></div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    let monPF = JSON.parse(localStorage.getItem('goat_v16_data')) || [];
+    let duree = 20;
+    let mesGraphs = {};
+
+    function ajouterActif() {
+        const n = document.getElementById('nomFonds').value;
+        const m = parseFloat(document.getElementById('montantFonds').value);
+        const f = parseFloat(document.getElementById('fraisFonds').value) || 0;
+        const t = document.getElementById('typeFonds').value;
+        const g = document.getElementById('geoFonds').value;
+        if(!n || isNaN(m)) return;
+        monPF.push({ n, m, f, t, g });
+        sauvegarder();
+    }
+
+    function sauvegarder() {
+        localStorage.setItem('goat_v16_data', JSON.stringify(monPF));
+        actualiser();
+    }
+
+    function viderTout() { if(confirm("Effacer ?")) { monPF = []; sauvegarder(); } }
+    function majHorizon(v) { duree = parseInt(v); document.getElementById('valHorizon').innerText = v; actualiser(); }
+
+    function actualiser() {
+        let total = 0;
+        let rT = {}, rG = {};
+        const tbody = document.querySelector('#tablePortefeuille tbody');
+        tbody.innerHTML = '';
+
+        monPF.forEach((a, i) => {
+            total += a.m;
+            rT[a.t] = (rT[a.t] || 0) + a.m;
+            rG[a.g] = (rG[a.g] || 0) + a.m;
+            tbody.innerHTML += `<tr><td>${a.n}</td><td>${a.m.toLocaleString()}€</td><td class="delete-btn" onclick="monPF.splice(${i},1); sauvegarder()">✕</td></tr>`;
+        });
+        document.getElementById('totalDisplay').innerText = total.toLocaleString() + " €";
+        dessiner(total, rT, rG);
+    }
+
+    function dessiner(total, rT, rG) {
+        const ctxP = document.getElementById('chartProjection').getContext('2d');
+        if(mesGraphs.p) mesGraphs.p.destroy();
+        
+        // --- CALCUL PERTINENT (Pondéré par actif) ---
+        let labels = ["An 0"];
+        let mediane = [total], optimiste = [total], pessimiste = [total];
+        
+        for(let y=1; y<=duree; y++) {
+            let evolAn = 0;
+            monPF.forEach(a => {
+                let r = (a.t === 'Immo') ? 0.05 : (a.t === 'Bourse' ? 0.08 : 0.06);
+                let netR = r - (a.f / 100);
+                evolAn += a.m * Math.pow(1 + netR, y);
+            });
+            mediane.push(evolAn);
+            optimiste.push(evolAn * (1 + 0.15 * Math.sqrt(y/duree))); // Simulation volatilité
+            pessimiste.push(evolAn * (1 - 0.15 * Math.sqrt(y/duree)));
+            labels.push("An " + y);
+        }
+
+        mesGraphs.p = new Chart(ctxP, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Médiane (Net de frais)', data: mediane, borderColor: '#22c55e', fill: false, tension: 0.1 },
+                    { label: 'Zone de probabilité', data: optimiste, borderColor: 'transparent', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: '+1', pointRadius: 0 },
+                    { label: 'Pessimiste', data: pessimiste, borderColor: 'transparent', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: false, pointRadius: 0 }
+                ]
+            },
+            options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { ticks: { color: '#888' } }, x: { ticks: { color: '#888' } } } }
+        });
+
+        // --- GRAPH TYPE & GEO ---
+        const cfg = (ctx, data, colors) => new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: colors, borderWidth: 0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } } });
+        if(mesGraphs.t) mesGraphs.t.destroy();
+        mesGraphs.t = cfg(document.getElementById('chartType').getContext('2d'), rT, ['#3b82f6','#22c55e','#f59e0b','#a855f7']);
+        if(mesGraphs.g) mesGraphs.g.destroy();
+        mesGraphs.g = cfg(document.getElementById('chartGeo').getContext('2d'), rG, ['#3b82f6','#10b981','#6366f1','#f43f5e']);
+    }
+    actualiser();
+</script>
+</body>
+</html>
